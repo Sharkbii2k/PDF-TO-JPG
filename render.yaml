@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: delivery-note-tool
+    runtime: docker
+    plan: free
+    autoDeploy: true
