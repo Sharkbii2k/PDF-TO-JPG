@@ -263,7 +263,7 @@ PAGE_HTML = r"""
         <h1 class="title">PDF Delivery Note Tool</h1>
         <p class="subtitle">
           Upload nhiều file PDF cùng lúc. Hệ thống sẽ tự đọc ETA, xác định Line No để chia vào thư mục 1F hoặc 2F,
-          chuyển trang đầu sang ảnh JPG 300 DPI và trả về 1 file ZIP.
+          chuyển trang đầu sang ảnh PNG 300 DPI để giữ nét chữ sát bản gốc hơn và trả về 1 file ZIP.
         </p>
       </div>
 
@@ -293,7 +293,7 @@ PAGE_HTML = r"""
       <div class="spinner" aria-hidden="true"></div>
       <h2 class="overlay-title">Đang xử lý PDF...</h2>
       <p class="overlay-text">
-        Vui lòng giữ nguyên trang này. Server đang đọc ETA, phân loại Line No, chuyển ảnh và nén ZIP.
+        Vui lòng giữ nguyên trang này. Server đang đọc ETA, phân loại Line No, xuất ảnh PNG chất lượng cao và nén ZIP.
       </p>
     </div>
   </div>
@@ -557,7 +557,7 @@ def save_upload_stream(file_storage, output_path: str) -> None:
         shutil.copyfileobj(file_storage.stream, output_file, length=1024 * 1024)
 
 
-def render_first_page_to_jpg(pdf_path: str, output_jpg_path: str, temp_render_dir: str) -> None:
+def render_first_page_to_png(pdf_path: str, output_png_path: str, temp_render_dir: str) -> None:
     """
     Convert only the first page at 300 DPI.
     Use paths_only=True so pdf2image writes directly to disk instead of keeping PIL images in RAM.
@@ -567,17 +567,18 @@ def render_first_page_to_jpg(pdf_path: str, output_jpg_path: str, temp_render_di
         dpi=300,
         first_page=1,
         last_page=1,
-        fmt="jpeg",
-        jpegopt={"quality": 95, "optimize": True},
+        fmt="png",
+        use_pdftocairo=True,
+        transparent=False,
         output_folder=temp_render_dir,
         paths_only=True,
         thread_count=1,
     )
 
     if not generated_paths:
-        raise RuntimeError("Không thể chuyển trang đầu của PDF sang ảnh.")
+        raise RuntimeError("Không thể chuyển trang đầu của PDF sang ảnh PNG.")
 
-    shutil.move(generated_paths[0], output_jpg_path)
+    shutil.move(generated_paths[0], output_png_path)
 
 
 def ensure_unique_filename(filename: str, used_names: set) -> str:
@@ -647,10 +648,10 @@ def process_files(uploaded_files: List) -> Tuple[str, str, int, int]:
                     continue
 
                 output_folder = folder_1f if folder == "1F" else folder_2f
-                image_name = os.path.splitext(unique_name)[0] + ".jpg"
-                output_jpg_path = os.path.join(output_folder, image_name)
+                image_name = os.path.splitext(unique_name)[0] + ".png"
+                output_png_path = os.path.join(output_folder, image_name)
 
-                render_first_page_to_jpg(pdf_path, output_jpg_path, render_temp_dir)
+                render_first_page_to_png(pdf_path, output_png_path, render_temp_dir)
                 processed_count += 1
             finally:
                 if os.path.exists(pdf_path):

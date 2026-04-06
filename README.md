@@ -1,6 +1,6 @@
 # Delivery Note PDF Tool
 
-Web tool Flask để upload nhiều file PDF Delivery Note, tự đọc ETA, phân loại theo Line No (1F/2F), convert trang đầu thành JPG 300 DPI và trả về file ZIP.
+Web tool Flask để upload nhiều file PDF Delivery Note, tự đọc ETA, phân loại theo Line No (1F/2F), convert trang đầu thành PNG 300 DPI (lossless, nét chữ tốt hơn JPG) và trả về file ZIP.
 
 ## Cấu trúc project
 
@@ -51,6 +51,7 @@ git push -u origin main
 
 - Chỉ xử lý từng PDF một.
 - Chỉ convert trang đầu tiên.
+- Xuất PNG để tránh méo/nhòe chữ do nén JPG.
 - Dùng thư mục tạm trên disk thay vì giữ dữ liệu trong RAM.
 - Gọi `gc.collect()` sau mỗi file.
 - Gunicorn chạy `1 worker`, `2 threads` để phù hợp Render Free.
